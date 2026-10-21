@@ -108,3 +108,19 @@ def atualizar_livro(livro_id: int, livro: Livro):
         "id": livro_id,
         "livro": livros[livro_id]
     }
+
+@app.delete("/livros/{livro_id}")
+def deletar_livros(livro_id: int):
+    if livro_id not in livros:
+        raise HTTPException(
+            status_code=404,
+            detail="Livro não encontrado!"
+        )
+
+    livro_removido = livros.pop(livro_id)
+
+    return {
+        "mensagem": " Livro removido com sucesso!",
+        "id": livro_id,
+        "livro": livro_removido
+    }
