@@ -93,3 +93,18 @@ def postar_livro(livro: Livro):
         "id": novo_id,
         "livro": livros[novo_id]
     }
+
+@app.put("/livros/{livro_id}")
+def atualizar_livro(livro_id: int, livro: Livro):
+    if livro_id not in livros:
+        raise HTTPException(
+            status_code=404,
+            detail='Livro não encontrado!'
+        )
+
+    livros[livro_id] = livro.model_dump()
+
+    return {
+        "id": livro_id,
+        "livro": livros[livro_id]
+    }
