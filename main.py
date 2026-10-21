@@ -1,7 +1,11 @@
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
+from database import criar_tabelas
+from models import Livro
 
 app = FastAPI()
+
+criar_tabelas()
 
 livros = {
     1: {
