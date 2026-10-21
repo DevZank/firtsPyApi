@@ -1,4 +1,5 @@
 from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel
 
 app = FastAPI()
 
@@ -59,6 +60,12 @@ livros = {
     }
 }
 
+class Livro(BaseModel):
+    nome: str
+    preco: float
+    sinopse: str
+    imagem: str
+
 @app.get("/")
 def inicio():
     return {"mensagem": "Successfully connected!"}
@@ -76,3 +83,13 @@ def buscar_livro(livro_id: int):
         )
     return livros[livro_id]
 
+@app.post("/livros")
+def postar_livro(livro: Livro):
+    novo_id = max(livros.keys()) + 1
+
+    livros[novo_id] = livro.model_dump()
+
+    return {
+        "id": novo_id,
+        "livro": livros[novo_id]
+    }
