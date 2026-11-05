@@ -1,9 +1,15 @@
+from schemas import (
+    LivroAtualizacao,
+    LivroCriacao,
+    UsuarioCriacao, 
+    UsuarioLogin
+)
+
 from fastapi import FastAPI, Depends, HTTPException
 from sqlmodel import Session, select
 from database import criar_tabelas, obter_sessao
-from schemas import LivroAtualizacao, LivroCriacao, UsuarioCriacao
 from models import Livro, Usuario
-from security import gerar_hash_senha
+from security import gerar_hash_senha, criar_token, verificar_senha
 
 app = FastAPI()
 
@@ -124,14 +130,19 @@ def criar_usuario(
         nome=dados_usuario.nome,
         email=dados_usuario.email,
         telefone=dados_usuario.telefone,
-        senha=dados_usuario.senha
+        senha=gerar_hash_senha(dados_usuario.senha)
     )
 
     sessao.add(novo_usuario)
     sessao.commit() 
     sessao.refresh(novo_usuario)
 
-    return novo_usuario
+    return {
+        "id": novo_usuario.id,
+        "nome": novo_usuario.nome,
+        "email": novo_usuario.email,
+        "telefone": novo_usuario.telefone, 
+    }
 
 @app.put("/usuarios/{usuario_id}")
 def atualizar_usuario(
@@ -173,4 +184,31 @@ def deletar_usuario(usuario_id: int, sessao: Session = Depends(obter_sessao)):
     return {
         "mensagem": "Usuário removido com sucesso!",
         "id": usuario_id
+    }
+
+@app.post("/login")
+def login(
+    dados_login: UsuarioLogin,
+    sessao: Session = Depends(obter_sessao)
+):
+    comando = select(Usuario).where(
+        Usuario.email == dados_login.email
+    )
+
+    usuario = sessao.exec(comando).first()
+
+    if usuario is None or not verificar_senha(
+        dados_login.senha,
+        usuario.senha
+    ):
+        raise HTTPException(
+            status_code=401,
+            detail="Email ou senha inválidos"
+        )
+
+    token = criar_token(usuario.email)
+
+    return {
+        "access_token": token,
+        "token_type": "bearer"
     }

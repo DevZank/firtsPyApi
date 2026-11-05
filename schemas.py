@@ -19,3 +19,13 @@ class UsuarioCriacao(BaseModel):
     email: str
     telefone: int
     senha: str
+
+class UsuarioLogin(BaseModel):
+    email: str
+    senha: str
+
+class UsuarioResposta(BaseModel):
+    id: int
+    nome: str
+    email: str
+    telefone: int
