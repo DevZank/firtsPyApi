@@ -3,13 +3,14 @@ from schemas import (
     LivroCriacao,
     UsuarioCriacao, 
     UsuarioLogin
+    UsuarioResposta
 )
 
 from fastapi import FastAPI, Depends, HTTPException
 from sqlmodel import Session, select
 from database import criar_tabelas, obter_sessao
 from models import Livro, Usuario
-from security import gerar_hash_senha, criar_token, verificar_senha
+from security import gerar_hash_senha, criar_token, verificar_senha, obter_usuario_atual
 
 app = FastAPI()
 
@@ -103,14 +104,13 @@ def deletar_livros(livro_id: int, sessao: Session = Depends(obter_sessao)):
 
 @app.get("/usuarios")
 def listar_usuarios(
-    sessao: Session = Depends(obter_sessao)
+    sessao: Session = Depends(obter_sessao),
+    usuario_atual: Usuario = Depends(obter_usuario_atual)
 ):
     comando = select(Usuario)
-    usuarios = sessao.exec(comando).all()
+    return sessao.exec(comando).all()
 
-    return usuarios
-
-@app.get("/usuarios/{usuario_id}")
+@app.get("/usuarios/{usuario_id}", response_model=UsuarioResposta)
 def buscar_usuario(usuario_id: int, sessao: Session = Depends(obter_sessao)):
     usuario = sessao.get(Usuario, usuario_id)
 
