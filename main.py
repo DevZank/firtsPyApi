@@ -1,8 +1,9 @@
 from fastapi import FastAPI, Depends, HTTPException
 from sqlmodel import Session, select
 from database import criar_tabelas, obter_sessao
-from schemas import LivroAtualizacao, LivroCriacao
-from models import Livro
+from schemas import LivroAtualizacao, LivroCriacao, UsuarioCriacao
+from models import Livro, Usuario
+from security import gerar_hash_senha
 
 app = FastAPI()
 
@@ -92,4 +93,84 @@ def deletar_livros(livro_id: int, sessao: Session = Depends(obter_sessao)):
     return {
         "mensagem": "Livro removido com sucesso!",
         "id": livro_id
+    }
+
+@app.get("/usuarios")
+def listar_usuarios(
+    sessao: Session = Depends(obter_sessao)
+):
+    comando = select(Usuario)
+    usuarios = sessao.exec(comando).all()
+
+    return usuarios
+
+@app.get("/usuarios/{usuario_id}")
+def buscar_usuario(usuario_id: int, sessao: Session = Depends(obter_sessao)):
+    usuario = sessao.get(Usuario, usuario_id)
+
+    if usuario is None:
+        raise HTTPException(
+            status_code=404,
+            detail='Usuário não encontrado!'
+        )
+    return usuario
+
+@app.post("/usuarios")
+def criar_usuario(
+    dados_usuario: UsuarioCriacao, sessao: Session = Depends(obter_sessao)    
+):
+
+    novo_usuario = Usuario(
+        nome=dados_usuario.nome,
+        email=dados_usuario.email,
+        telefone=dados_usuario.telefone,
+        senha=dados_usuario.senha
+    )
+
+    sessao.add(novo_usuario)
+    sessao.commit() 
+    sessao.refresh(novo_usuario)
+
+    return novo_usuario
+
+@app.put("/usuarios/{usuario_id}")
+def atualizar_usuario(
+        usuario_id: int,
+        dados_usuario: UsuarioCriacao,
+        sessao: Session = Depends(obter_sessao)
+):
+    usuario = sessao.get(Usuario, usuario_id)
+
+    if usuario is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Usuário não encontrado!"
+        )
+
+    usuario.nome = dados_usuario.nome
+    usuario.email = dados_usuario.email
+    usuario.telefone = dados_usuario.telefone
+    usuario.senha = dados_usuario.senha
+
+    sessao.commit()
+    sessao.refresh(usuario)
+
+    return usuario  
+
+@app.delete("/usuarios/{usuario_id}")
+def deletar_usuario(usuario_id: int, sessao: Session = Depends(obter_sessao)):
+    usuario = sessao.get(Usuario, usuario_id)
+
+    if usuario is None:
+        raise HTTPException(
+            status_code=404,
+            detail='Usuário não encontrado!'
+        )
+
+    sessao.delete(usuario)
+    sessao.commit()
+
+    return {
+        "mensagem": "Usuário removido com sucesso!",
+        "id": usuario_id
     }

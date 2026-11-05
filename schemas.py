@@ -13,3 +13,9 @@ class LivroAtualizacao(BaseModel):
     sinopse: str
     imagem: str
     estoque: int = Field(ge=0)
+
+class UsuarioCriacao(BaseModel):
+    nome: str = Field(min_length=1)
+    email: str
+    telefone: int
+    senha: str

@@ -12,3 +12,12 @@ class Livro(SQLModel, table=True):
     sinopse: str
     imagem: str
     estoque: int = 0
+
+class Usuario(SQLModel, table=True):
+    __tablename__ = "usuarios"
+
+    id: Optional[int] = Field(default=None, primary_key=True)
+    nome: str
+    email: str
+    telefone: int
+    senha: str
